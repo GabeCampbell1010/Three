@@ -44,6 +44,9 @@ namespace SpreadsheetUtilities
     /// </summary>
     public class Formula
     {
+
+        private string _formula;
+
         /// <summary>
         /// Creates a Formula from a string that consists of an infix expression written as
         /// described in the class comment.  If the expression is syntactically invalid,
@@ -82,12 +85,66 @@ namespace SpreadsheetUtilities
         /// </summary>
         public Formula(String formula, Func<string, string> normalize, Func<string, bool> isValid)
         {
+            //number 1 parsing is already covered by GetTokens?
+
+            //number 2 token count rule
+            if(GetTokens(formula).Count() < 1)
+            {
+                throw new FormulaFormatException("no tokens present");
+            }
+
+            //do parenthesis check here, balanced and right, numbers 3 and 4
+
+            //end parenthesis check
+
+            
+
+            var tokenArray = GetTokens(formula).ToArray<string>();//use this to check
+
+            // 5 and 6 starting and ending token check
+            //The first token of an expression must be a number, a variable, or an opening parenthesis.
+            if (!(Regex.IsMatch(tokenArray[0], @"\(") || Regex.IsMatch(tokenArray[0], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[0], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?")))
+            {
+                throw new FormulaFormatException("first token is not a number, variable or opening parenthesis");
+            }
+            if (!(Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"\(") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?")))
+            {
+                throw new FormulaFormatException("last token is not a number, variable or closing parenthesis");
+            }
+
+            
+            for (int i = 0; i < tokenArray.Length; i++)//could probably just do everything inthis for loop
+            {
+                //number 7
+                //Any token that immediately follows an opening parenthesis or an operator must be either a number, a variable, or an opening parenthesis.
+                if (tokenArray[i] == "(" || Regex.IsMatch(tokenArray[i], @"[\+\-*/]"))
+                {
+                    if (!(Regex.IsMatch(tokenArray[i+1], @"\(") || Regex.IsMatch(tokenArray[i + 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[i + 1], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?")))
+                    {
+                        throw new FormulaFormatException("token that immediately follows an opening parenthesis or an operator is not either a number, a variable, or an opening parenthesis");
+                    }
+                }
+                //number 8 extra following
+                //Any token that immediately follows a number, a variable, or a closing parenthesis must be either an operator or a closing parenthesis.
+                if (Regex.IsMatch(tokenArray[i], @"\)") || Regex.IsMatch(tokenArray[i], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[i], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?"))
+                {
+                    if (!(tokenArray[i+1] == ")" || Regex.IsMatch(tokenArray[i+1], @"[\+\-*/]")))
+                    {
+                        throw new FormulaFormatException("token that immediately follows a number, a variable, or a closing parenthesis is not either an operator or a closing parenthesis");
+                    }
+                }
+
+
+            }
+
+            //Any token that immediately follows a number, a variable, or a closing parenthesis must be either an operator or a closing parenthesis.
+
             foreach (string item in GetTokens(formula))
             {
                 //use normalize and isvalid forthe variables, not the operators or doubles but just the variables
                 //if its a vairable then normalize like cpaitlaize, and then check for validity
                 //is this a valid vairable by our standards, write privatefunction for that, then check their startndards with isvalid
-
+                
                 string itemNormalized;//this stores the normalized version of the item
 
                 if (Regex.IsMatch(item, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))//check if variable, this from getokens below, excudes numbers (floats) and operatoors and parentheses
@@ -98,16 +155,26 @@ namespace SpreadsheetUtilities
                     }
                     catch(Exception)
                     {
-                        throw new FormulaFormatException("");
+                        throw new FormulaFormatException("item cannot be normalized");
                     }
 
                     if (!isValid(itemNormalized))//check if valid
                     {
-                        throw new FormulaFormatException("");
+                        throw new FormulaFormatException("item is not valid");
                     }
+                    _formula += itemNormalized;
+                    continue;//maybe not finished here 
                 }
-                
+
+                //do more work here for 1-8 startingwith parsing
+
+                _formula += item;//maybe do as stringbuilder but this is ok
             }
+
+
+
+            //check the 8 steps thatgo in the constructor staring with 1.parsing
+            //build up a string representation of formaula that is normalized and so on and keep as aprivte member variabel 
         }
 
         /// <summary>
@@ -123,7 +190,7 @@ namespace SpreadsheetUtilities
         /// new Formula("x+7").Evaluate(L) is 9
         /// 
         /// Given a variable symbol as its parameter, lookup returns the variable's value 
-        /// (if it has one) or throws an ArgumentException (otherwise).
+        /// (if it has one) or throws an FormulaFormatException (otherwise).
         /// 
         /// If no undefined variables or divisions by zero are encountered when evaluating 
         /// this Formula, the value is returned.  Otherwise, a FormulaError is returned.  
@@ -134,7 +201,209 @@ namespace SpreadsheetUtilities
         public object Evaluate(Func<string, double> lookup)
         {
             #region Evaluate
-            
+            ///stacks for operands and operators
+            Stack<string> values = new Stack<string>();//seems to work with string stacks, why do i need to use generics here?
+            Stack<string> operators = new Stack<string>();
+
+            ///various checks for input validity, including checking for null, spaces and no operator between operands, correct characters, trimming whitespace, etc...
+            if (_formula == null)//check for null
+                throw new FormulaFormatException("input value cannot be null string");
+
+            //check for spaces between operands
+            if (Regex.IsMatch(_formula, @"[a-zA-Z]*\d+\s+[a-zA-Z]*\d+"))
+            {
+                throw new FormulaFormatException("there are two operands with a space between them");
+            }
+
+            if (Regex.IsMatch(_formula, @"[a-zA-Z]+[^0-9]$"))//trying to test for one or more letters and no numbers
+            {
+                throw new FormulaFormatException("invalid variable, letters without a number");
+            }
+
+            //use regular expressions to replace all the whitespace in input with nothing
+            _formula = Regex.Replace(_formula, @"\s+", "");
+
+            //this will throw an exception if any of the input characters are invalid
+            if (Regex.IsMatch(_formula, @"[^0-9A-Za-z()*/+-]"))
+            {
+                throw new FormulaFormatException("there are invalid characters in the input");
+            }
+            string[] substrings = Regex.Split(_formula, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
+
+            foreach (string variable in substrings)
+            {
+                if (!Regex.IsMatch(variable, @"[+|\-|*|/|%|(|)|]") && variable != "")
+                {
+                    if (!Regex.IsMatch(variable, @"^[a-zA-Z]*\d+$"))
+                    {
+                        throw new Exception("invalid input type");
+                    }
+                }
+            }
+
+            for (int i = 0; i < substrings.Length; i++)
+            {
+                //if empty string
+                if (substrings[i] == "")//go on to the next loop if its an empty string
+                    continue;
+                //if value string
+                if (Regex.IsMatch(substrings[i], @"[a-zA-Z]*\d+"))
+                {
+                    if (values.Count == 0)
+                    {
+                        values.Push(substrings[i]);
+                        continue;
+                    }
+
+                    if (values.Count != 0)  //check there is a value at the top of values, if not throw an error, if so pop it, the thing you popoff is the numerator, and do calculation, that is in Calculate method, then put that returned value back into values as a string
+                    {
+                        if (operators.Peek() == "/" || operators.Peek() == "*")//peek the operator stack, if it has a * or \ then do some evaluating, otherwise add the value to the value stack
+                        {
+
+                            string y = values.Pop();
+                            string x = substrings[i];
+                            string sign = operators.Pop();
+                            values.Push(MultiplyOrDivide(x, y, sign, lookup).ToString());
+                        }
+                        else//just push to the values stack if the operator stack does not have an operator for it
+                        {
+                            values.Push(substrings[i]);
+                        }
+                    }
+                    else
+                    {
+                        throw new FormulaFormatException("no values on the value stack to multiply or divide by");
+                    }
+                }
+                //if * or / operator or ( left parenthesis then push onto the operator stack
+                if (substrings[i] == "*" || substrings[i] == "/" || substrings[i] == "(")
+                    operators.Push(substrings[i]);
+
+                //if + or - operator
+                if (substrings[i] == "+" || substrings[i] == "-")
+                {
+                    if (operators.Count == 0)
+                    {
+                        operators.Push(substrings[i]);
+                        continue;//so i don't get an error on the first operator
+                    }
+                    if (operators.Peek() == "+" || operators.Peek() == "-")
+                    {
+                        if (values.Count > 1)//if - or + on top of operators stack
+                        {
+                            string x = values.Pop();
+                            string y = values.Pop();
+                            string sign = operators.Pop();
+                            values.Push(AddOrSubtract(x, y, sign, lookup).ToString());//do calculation and push result back onto values stack as a string
+
+                        }
+                        else
+                        {
+                            throw new FormulaFormatException("tried to pop off 2 values from value stack for + or - operator but there were fewer than 2 values, could be caused by extra operator");
+                        }
+                    }
+                    operators.Push(substrings[i]);//push + or - onto the operator stack either way, regardless of whether above to conditions are met
+                }
+
+                if (substrings[i] == ")")
+                {
+                    if (operators.Count == 0)
+                        throw new Exception("no operators on the stack to pop after a right parenthesis, perhaps your parentheses are not in the proper order");
+
+                    if (operators.Peek() == "+" || operators.Peek() == "-")
+                    {
+                        if (values.Count > 1)
+                        {
+                            string x = values.Pop();
+                            string y = values.Pop();
+                            string sign = operators.Pop();
+                            values.Push(AddOrSubtract(x, y, sign, lookup).ToString());//do calculation and push result back onto values stack as a string
+
+                        }
+                        else
+                        {
+                            throw new FormulaFormatException("tried to pop off 2 values from value stack for + or - operator but there were fewer than 2 values, perhaps a right parenthesis is out of order or superfluous");
+                        }
+                    }
+                    if (operators.Peek() == "(")
+                    {
+                        operators.Pop();
+                    }
+                    else
+                    {
+                        throw new FormulaFormatException("the top of the operator stack was supposed to be a '(' but it was a: " + operators.Peek());
+                    }
+                    if (operators.Count != 0 && (operators.Peek() == "/" || operators.Peek() == "*"))//peek the operator stack, if it has a * or / then do some evaluating, otherwise add the value to the value stack
+                    {
+
+                        if (values.Count > 1)//check if enough values to do below calculation
+                        {
+                            string x = values.Pop();
+                            string y = values.Pop();
+                            string sign = operators.Pop();
+                            values.Push(MultiplyOrDivide(x, y, sign, lookup).ToString());
+                        }
+                        else
+                        {
+                            throw new FormulaFormatException("tried to pop off 2 values from value stack for * or / operator but there were fewer than 2 values on value stack");
+                        }
+
+                    }
+                    else
+                    {
+                        //i think don't do anything here?
+                    }
+                }
+            }
+
+            if (operators.Count == 0)
+            {
+                if (values.Count == 1)//if there is only one remaining value on the stack 
+                {
+
+                    double X = 0;
+
+                    if (Regex.IsMatch(values.Peek(), @"^[a-zA-Z]+\d+$"))
+                    {
+                        try { X = lookup(values.Pop()); }
+                        catch (FormulaFormatException)
+                        {
+                            throw new FormulaFormatException("could not convert variable");
+                        }
+                        return X;
+
+                    }
+                    else
+                    {
+                        return Convert.ToDouble(values.Pop());
+                    }
+                }
+            }
+            else
+            {
+                if (operators.Count == 1 && values.Count == 2 && (operators.Peek() == "+" || operators.Peek() == "-"))
+                {
+                    string x = values.Pop();
+                    string y = values.Pop();
+                    string sign = operators.Pop();
+                    values.Push(AddOrSubtract(x, y, sign, lookup).ToString());
+                    return Convert.ToDouble(values.Pop());//try parse?
+                }
+                else
+                {
+                    throw new FormulaFormatException("more than one operator left on the stack after string has been evaluated, or one remaining operator is not a + or -, or not exactly 2 values left on the value stack");
+                }
+            }
+
+
+            //return 0;
+            //not really sure if below is necessary or helpful
+            double result;
+            if (Double.TryParse(_formula, out result))
+                return result;
+            else
+                throw new Exception("the result could not be converted to an integer");
+
             #endregion
             return null;
         }
@@ -148,36 +417,36 @@ namespace SpreadsheetUtilities
         /// <param name="sign">operator</param>
         /// <param name="lookup">delegate for lookup</param>
         /// <returns></returns>
-        public static int AddOrSubtract(string x, string y, string sign, Lookup lookup)
+        public static double AddOrSubtract(string x, string y, string sign, Func<string, double> lookup)
         {
-            int X = 0;
-            int Y = 0;
+            double X = 0;
+            double Y = 0;
 
             if (Regex.IsMatch(x, @"^[a-zA-Z]+\d+$"))
             {
                 try { X = lookup(x); }
-                catch (ArgumentException)
+                catch (FormulaFormatException)
                 {
-                    throw new ArgumentException("invalid variable");
+                    throw new FormulaFormatException("invalid variable");
                 }
 
             }
             else
             {
-                X = Convert.ToInt32(x);
+                X = Convert.ToDouble(x);
             }
             if (Regex.IsMatch(y, @"^[a-zA-Z]+\d+$"))
             {
                 try { Y = lookup(x); }
-                catch (ArgumentException)
+                catch (FormulaFormatException)
                 {
-                    throw new ArgumentException("invalid variable");
+                    throw new FormulaFormatException("invalid variable");
                 }
 
             }
             else
             {
-                Y = Convert.ToInt32(y);
+                Y = Convert.ToDouble(y);
             }
 
             switch (sign)
@@ -197,42 +466,42 @@ namespace SpreadsheetUtilities
         /// <param name="sign">multiply * or divide /</param>
         /// <param name="lookup">lookup delegate</param>
         /// <returns></returns>
-        public static int MultiplyOrDivide(string x, string y, string sign, Lookup lookup)
+        public static double MultiplyOrDivide(string x, string y, string sign, Func<string, double> lookup)
         {
-            int X = 0;
-            int Y = 0;
+            double X = 0;
+            double Y = 0;
             //need to check if the variable does not have a value in the table
             if (Regex.IsMatch(x, @"^[a-zA-Z]+\d+$"))
             {
                 try { X = lookup(x); }
-                catch (ArgumentException)
+                catch (FormulaFormatException)
                 {
-                    throw new ArgumentException("invalid variable");
+                    throw new FormulaFormatException("invalid variable");
                 }
 
             }
             else
             {
-                X = Convert.ToInt32(x);
+                X = Convert.ToDouble(x);
             }
             if (Regex.IsMatch(y, @"^[a-zA-Z]+\d+$"))
             {
                 try { Y = lookup(x); }
-                catch (ArgumentException)
+                catch (FormulaFormatException)
                 {
-                    throw new ArgumentException("invalid variable");
+                    throw new FormulaFormatException("invalid variable");
                 }
             }
             else
             {
-                Y = Convert.ToInt32(y);
+                Y = Convert.ToDouble(y);
             }
 
             switch (sign)
             {
                 case "*": return X * Y;
-                case "/": if (X == 0) { throw new ArgumentException("divide by zero"); } else { return Y / X; }//should perhaps replace these conversions to tryparse to test to make sure that math can be done with them
-                default: throw new ArgumentException("invalid operator");
+                case "/": if (X == 0) { throw new FormulaFormatException("divide by zero"); } else { return Y / X; }//should perhaps replace these conversions to tryparse to test to make sure that math can be done with them
+                default: throw new FormulaFormatException("invalid operator");
             }
         }
         #endregion

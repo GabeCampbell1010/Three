@@ -101,6 +101,7 @@ namespace FormulaEvaluatorPS1
             else
             {
                 Y = Convert.ToInt32(y);
+                //Y = Convert.ToDouble(y);
             }
 
             switch (sign)
@@ -113,39 +114,39 @@ namespace FormulaEvaluatorPS1
         /// <summary>
         /// main evaluator method that takes in the lookup delegate and the users input string
         /// </summary>
-        /// <param name="exp">users input string</param>
+        /// <param name="_formula">users input string</param>
         /// <param name="lookup">lookup delegate</param>
         /// <returns></returns>
-        public static int Evaluate(string exp, Lookup lookup)
+        public static int Evaluate(string _formula, Lookup lookup)
         {
             ///stacks for operands and operators
             Stack<string> values = new Stack<string>();//seems to work with string stacks, why do i need to use generics here?
             Stack<string> operators = new Stack<string>();
 
             ///various checks for input validity, including checking for null, spaces and no operator between operands, correct characters, trimming whitespace, etc...
-            if (exp == null)//check for null
+            if (_formula == null)//check for null
                 throw new ArgumentException("input value cannot be null string");
 
             //check for spaces between operands
-            if (Regex.IsMatch(exp, @"[a-zA-Z]*\d+\s+[a-zA-Z]*\d+"))
+            if (Regex.IsMatch(_formula, @"[a-zA-Z]*\d+\s+[a-zA-Z]*\d+"))
             {
                 throw new ArgumentException("there are two operands with a space between them");
             }
 
-            if (Regex.IsMatch(exp, @"[a-zA-Z]+[^0-9]$"))//trying to test for one or more letters and no numbers
+            if (Regex.IsMatch(_formula, @"[a-zA-Z]+[^0-9]$"))//trying to test for one or more letters and no numbers
             {
                 throw new ArgumentException("invalid variable, letters without a number");
             }
 
             //use regular expressions to replace all the whitespace in input with nothing
-            exp = Regex.Replace(exp, @"\s+", "");
+            _formula = Regex.Replace(_formula, @"\s+", "");
 
             //this will throw an exception if any of the input characters are invalid
-            if (Regex.IsMatch(exp, @"[^0-9A-Za-z()*/+-]"))
+            if (Regex.IsMatch(_formula, @"[^0-9A-Za-z()*/+-]"))
             {
                 throw new ArgumentException("there are invalid characters in the input");
             }
-            string[] substrings = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
+            string[] substrings = Regex.Split(_formula, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
 
             foreach (string variable in substrings)
             {
@@ -316,7 +317,7 @@ namespace FormulaEvaluatorPS1
             //return 0;
             //not really sure if below is necessary or helpful
             int result;
-            if (Int32.TryParse(exp, out result))
+            if (Int32.TryParse(_formula, out result))
                 return result;
             else
                 throw new Exception("the result could not be converted to an integer");
