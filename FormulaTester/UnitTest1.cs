@@ -141,11 +141,20 @@ namespace FormulaTester
 
         }
 
-        //follows a closing parenthesis
+        //long formula
         [TestMethod()]
         public void LongComplexFormulaToTestEvaluate()
         {
-            Formula a = new Formula("4 + A5-(4/B35) - 1 - 2 / 4 * 6");
+            Formula a = new Formula("4 + A5-(4/B35) - 1 - 2 / 4 * 6 +(8)-4*(5)/(8)-(9)+(8-3)-(8+5)");
+            a.Evaluate(SampleDelegate);
+
+        }
+
+        //follows a closing parenthesis
+        [TestMethod()]
+        public void FormulaToTestEvaluate()
+        {
+            Formula a = new Formula("a10 * (A5 + A1)");
             a.Evaluate(SampleDelegate);
 
         }

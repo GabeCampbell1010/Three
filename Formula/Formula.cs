@@ -455,7 +455,7 @@ namespace SpreadsheetUtilities
         /// <param name="sign">operator</param>
         /// <param name="lookup">delegate for lookup</param>
         /// <returns></returns>
-        public static double AddOrSubtract(string x, string y, string sign, Func<string, double> lookup)
+        public static double AddOrSubtract(string x, string y, string sign, Func<string, double> lookup)//private not static and return objects// and tryParse as double and if not then check if formula error
         {
             double X = 0;
             double Y = 0;
@@ -463,9 +463,9 @@ namespace SpreadsheetUtilities
             if (Regex.IsMatch(x, @"^[a-zA-Z]+\d+$"))
             {
                 try { X = lookup(x); }
-                catch (FormulaFormatException)
+                catch (ArgumentException)
                 {
-                    throw new FormulaFormatException("invalid variable");
+                    //return new FormulaError("improper variable");
                 }
 
             }
@@ -476,9 +476,9 @@ namespace SpreadsheetUtilities
             if (Regex.IsMatch(y, @"^[a-zA-Z]+\d+$"))
             {
                 try { Y = lookup(x); }
-                catch (FormulaFormatException)
+                catch (ArgumentException)
                 {
-                    throw new FormulaFormatException("invalid variable");
+                    throw new FormulaFormatException("invalid variable");//need to return new formula error here too
                 }
 
             }
@@ -491,8 +491,9 @@ namespace SpreadsheetUtilities
             {
                 case "+": return X + Y;
                 case "-": return Y - X;
-                default: throw new Exception("invalid operator");
+                //default://throw new Exception("invalid operator");
             }
+            return 0;//return either double or formula error in final build, have a variable that is just the result and return at teh ene after havingassigned result to math sum
         }
         #endregion
         #region MultiplyOrDivide
@@ -618,7 +619,16 @@ namespace SpreadsheetUtilities
                 return false;//maybe not throw any exceptions but just return false here?
             }
             //null check
-            if(obj == null)
+            //if(obj == null)
+            //{
+            //    return false;//test with null object
+            //}
+
+            if(ReferenceEquals(obj, null) && ReferenceEquals(_formula, null))
+            {
+                return true;
+            }
+            else if(ReferenceEquals(obj, null) || ReferenceEquals(_formula, null))
             {
                 return false;
             }
