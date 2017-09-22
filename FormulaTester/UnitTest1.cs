@@ -56,6 +56,18 @@ namespace FormulaTester
             //Assert.AreEqual(a,t);
         }
 
+        /// <summary>
+        ///parenthesis counts
+        ///</summary>
+        [TestMethod()]
+        public void ParenCount()
+        {
+            Formula t = new Formula("A1 + 2");
+            Formula a = t;
+            Assert.IsFalse(a != t);
+            //Assert.AreEqual(a,t);
+        }
+
         //have three different tests for each block of code inside of the class, for each method and the constructor, and write more than that
         //get close to 100% code coverage
         //passing is 85, superior around 95

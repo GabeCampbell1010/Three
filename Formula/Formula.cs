@@ -94,12 +94,35 @@ namespace SpreadsheetUtilities
             }
 
             //do parenthesis check here, balanced and right, numbers 3 and 4
-
-            //end parenthesis check
-
-            
-
             var tokenArray = GetTokens(formula).ToArray<string>();//use this to check
+
+            int parenCount = 0;
+            int beginParenCount = 0;
+            int endParenCount = 0;
+
+            for (int i = 0; i < tokenArray.Length; i++)
+            {
+                if(tokenArray[i] == "(")
+                {
+                    parenCount++;
+                    beginParenCount++;
+                }
+                if(tokenArray[i] == ")")
+                {
+                    parenCount--;
+                    endParenCount++;
+                }
+                if(parenCount < 0)
+                {
+                    throw new FormulaFormatException("unbalanced parentheses");
+                }
+
+            }
+
+            if(endParenCount != beginParenCount)
+            {
+                throw new FormulaFormatException("parentheses open and close numbers not match");
+            }
 
             // 5 and 6 starting and ending token check
             //The first token of an expression must be a number, a variable, or an opening parenthesis.
@@ -609,11 +632,11 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator ==(Formula f1, Formula f2)
         {
-            if(f1 == null && f2 == null)
+            if (ReferenceEquals(f1, null) && ReferenceEquals(f2, null))
             {
                 return true;
             }
-            if (f1 == null ^ f2 == null)//Im pretty sure that this is an exclusive OR
+            if (ReferenceEquals(f1, null) ^ ReferenceEquals(f2, null))//Im pretty sure that this is an exclusive OR
             {
                 return false;
             }
@@ -633,21 +656,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator !=(Formula f1, Formula f2)
         {
-            if (f1 == null && f2 == null)
-            {
-                return false;
-            }
-            if (f1 == null ^ f2 == null)//Im pretty sure that this is an exclusive OR
-            {
-                return true;
-            }
-
-            if (f1.Equals(f2))
-            {
-                return false;
-            }
-
-            return true;
+            return !(f1 == f2);
         }
 
         /// <summary>
