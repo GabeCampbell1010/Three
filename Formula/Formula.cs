@@ -132,7 +132,7 @@ namespace SpreadsheetUtilities
             }
             var lastToken = tokenArray[tokenArray.Length - 1];
 
-            if(!Regex.IsMatch(lastToken, @"\)") || !Double.TryParse(tokenArray[0], out val) || !Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+            if(!Regex.IsMatch(lastToken, @"\)") && !Double.TryParse(lastToken, out val) && !Regex.IsMatch(lastToken, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
             {
                 throw new FormulaFormatException("last token is not a number, variable or closing parenthesis");
 
