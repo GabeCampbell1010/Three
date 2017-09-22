@@ -107,8 +107,9 @@ namespace SpreadsheetUtilities
             {
                 throw new FormulaFormatException("first token is not a number, variable or opening parenthesis");
             }
-            if (!(Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"\(") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?")))
+            if (!(Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"\(") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"-?\d+(?:\.\d+)?")))//i added this last regex myself because the given one for numbes does not seem to work properly
             {
+                var check = tokenArray[tokenArray.Length - 1];
                 throw new FormulaFormatException("last token is not a number, variable or closing parenthesis");
             }
 
@@ -119,11 +120,17 @@ namespace SpreadsheetUtilities
                 //Any token that immediately follows an opening parenthesis or an operator must be either a number, a variable, or an opening parenthesis.
                 if (tokenArray[i] == "(" || Regex.IsMatch(tokenArray[i], @"[\+\-*/]"))
                 {
-                    if (!(Regex.IsMatch(tokenArray[i+1], @"\(") || Regex.IsMatch(tokenArray[i + 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[i + 1], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?")))
+                    if (!(Regex.IsMatch(tokenArray[i+1], @"\(") || Regex.IsMatch(tokenArray[i + 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[i + 1], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"-?\d+(?:\.\d+)?")))
                     {
                         throw new FormulaFormatException("token that immediately follows an opening parenthesis or an operator is not either a number, a variable, or an opening parenthesis");
                     }
                 }
+
+                if (Regex.IsMatch(tokenArray[i], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?"))
+                {
+                    tokenArray[i] = Double.Parse(tokenArray[i]).ToString();
+                }
+
                 //number 8 extra following
                 //Any token that immediately follows a number, a variable, or a closing parenthesis must be either an operator or a closing parenthesis.
                 if (Regex.IsMatch(tokenArray[i], @"\)") || Regex.IsMatch(tokenArray[i], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[i], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?"))
@@ -223,23 +230,23 @@ namespace SpreadsheetUtilities
             //use regular expressions to replace all the whitespace in input with nothing
             _formula = Regex.Replace(_formula, @"\s+", "");
 
-            //this will throw an exception if any of the input characters are invalid
-            if (Regex.IsMatch(_formula, @"[^0-9A-Za-z()*/+-]"))
-            {
-                throw new FormulaFormatException("there are invalid characters in the input");
-            }
+            ////this will throw an exception if any of the input characters are invalid
+            //if (Regex.IsMatch(_formula, @"[^0-9A-Za-z()*/+-]"))
+            //{
+            //    throw new FormulaFormatException("there are invalid characters in the input");//shouldn't be necessary anymore?
+            //}
             string[] substrings = Regex.Split(_formula, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
 
-            foreach (string variable in substrings)
-            {
-                if (!Regex.IsMatch(variable, @"[+|\-|*|/|%|(|)|]") && variable != "")
-                {
-                    if (!Regex.IsMatch(variable, @"^[a-zA-Z]*\d+$"))
-                    {
-                        throw new Exception("invalid input type");
-                    }
-                }
-            }
+            //foreach (string variable in substrings)//should also be unneccessary now because its just checking for input validity which should happen in Formula ctor
+            //{
+            //    if (!Regex.IsMatch(variable, @"[+|\-|*|/|%|(|)|]") && variable != "")
+            //    {
+            //        if (!Regex.IsMatch(variable, @"^[a-zA-Z]*\d+$"))
+            //        {
+            //            throw new Exception("invalid input type");
+            //        }
+            //    }
+            //}
 
             for (int i = 0; i < substrings.Length; i++)
             {
@@ -405,7 +412,7 @@ namespace SpreadsheetUtilities
                 throw new Exception("the result could not be converted to an integer");
 
             #endregion
-            return null;
+            //return null;
         }
         #region AddOrSubtract
         /// <summary>
@@ -517,9 +524,18 @@ namespace SpreadsheetUtilities
         /// new Formula("x+X*z", N, s => true).GetVariables() should enumerate "X" and "Z".
         /// new Formula("x+X*z").GetVariables() should enumerate "x", "X", and "z".
         /// </summary>
-        public IEnumerable<String> GetVariables()
+        public IEnumerable<String> GetVariables()//is it saying i have to normalize again here? shouldn't that have happened in Formula constructor?
         {
-            return null;
+            HashSet<string> variables = new HashSet<string>();//made it a hash set so it doesn't return repeat values
+
+            foreach (var item in _formula)
+            {
+                if(Regex.IsMatch(item.ToString(), @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))//check if its a variable
+                {
+                    variables.Add(item.ToString());//***this is using the overloaded ToString, not the normal ToString, so I don't know if this is working, use base.ToString()?
+                }
+            }
+            return variables;//this is returning an enumerable but not enumerating them? do i need to yield return s foreach s in variables?
         }
 
         /// <summary>
@@ -534,7 +550,9 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override string ToString()
         {
-            return null;
+            //use regular expressions to replace all the whitespace in input with nothing
+            //_formula = Regex.Replace(_formula, @"\s+", "");
+            return _formula;//not sure if this is correct, but I'm just returning _formula without spaces (should probably already not have spaces?)
         }
 
         /// <summary>
@@ -559,7 +577,29 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override bool Equals(object obj)
         {
+            try
+            {
+                Formula type = (Formula)obj;//check if of formula type
+            }
+            catch (Exception)
+            {
+                //throw new FormulaFormatException("object was not of type Formula");
+                return false;//maybe not throw any exceptions but just return false here?
+            }
+            //null check
+            if(obj == null)
+            {
+                return false;
+            }
+
+            if(_formula.ToString() == obj.ToString())
+            {
+                return true;
+                //maybe supposed to be using this.ToString()
+            }
             return false;
+
+            //have token list and string vairbale formula separately?
         }
 
         /// <summary>
@@ -569,6 +609,20 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator ==(Formula f1, Formula f2)
         {
+            if(f1 == null && f2 == null)
+            {
+                return true;
+            }
+            if (f1 == null ^ f2 == null)//Im pretty sure that this is an exclusive OR
+            {
+                return false;
+            }
+
+            if (f1.Equals(f2))
+            {
+                return true;
+            }
+
             return false;
         }
 
@@ -579,7 +633,21 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator !=(Formula f1, Formula f2)
         {
-            return false;
+            if (f1 == null && f2 == null)
+            {
+                return false;
+            }
+            if (f1 == null ^ f2 == null)//Im pretty sure that this is an exclusive OR
+            {
+                return true;
+            }
+
+            if (f1.Equals(f2))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -589,7 +657,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override int GetHashCode()
         {
-            return 0;
+            return _formula.GetHashCode();//seems like something else is supposed to go in here as well? where is f1 and f2?
         }
 
         /// <summary>

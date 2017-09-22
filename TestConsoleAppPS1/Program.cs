@@ -21,9 +21,9 @@ namespace TestConsoleAppPS1
             //using test delegate, need to replace SampleDelegate with the actual variable test delegate
             //Console.WriteLine(FormulaEvaluatorPS1.Evaluator.Evaluate("A1 + 7", SampleDelegate));//print out the returned value
 
-            Formula formula = new Formula("A1 + 5");
+            Formula formula = new Formula("A1 + 5.0");
 
-            formula.Evaluate(SampleDelegateDouble);
+            Console.WriteLine((formula.Evaluate(SampleDelegateDouble)));
 
             Console.ReadKey();
 
