@@ -132,12 +132,47 @@ namespace FormulaTester
 
         }
 
-        //follows a closing parenthesis
+        //gethashcode
         [TestMethod()]
         public void GetHashCodeTest()
         {
             Formula a = new Formula("4");
             a.GetHashCode();
+
+        }
+
+        //follows a closing parenthesis
+        [TestMethod()]
+        public void LongComplexFormulaToTestEvaluate()
+        {
+            Formula a = new Formula("4 + A5-(4/B35) - 1 - 2 / 4 * 6");
+            a.Evaluate(SampleDelegate);
+
+        }
+
+        public double SampleDelegate(string s)
+        {
+            return 1;
+        }
+
+        //bad formulas
+        //follows a closing parenthesis
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void BadFormula1()
+        {
+            Formula a = new Formula("??");
+            a = new Formula("()");
+
+        }
+
+        //bad formulas
+        //follows a closing parenthesis
+        [TestMethod()]
+        public void GetVariables()
+        {
+            Formula a = new Formula("A1");
+            a.GetVariables();
 
         }
 
@@ -154,3 +189,5 @@ namespace FormulaTester
 //modify a cell with a Formula in it is to build a new Formula object.
 
     //precision for floating points, making sure equals includes the circular to string then to double to account for 2.000000001
+
+//am I supposed to use formula error somewhere?

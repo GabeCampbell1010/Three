@@ -245,21 +245,21 @@ namespace SpreadsheetUtilities
 
             ///various checks for input validity, including checking for null, spaces and no operator between operands, correct characters, trimming whitespace, etc...
             if (_formula == null)//check for null
-                throw new FormulaFormatException("input value cannot be null string");
+                throw new FormulaFormatException("input value cannot be null string");//this is maybe supposed to be a FormulaError
 
-            //check for spaces between operands
-            if (Regex.IsMatch(_formula, @"[a-zA-Z]*\d+\s+[a-zA-Z]*\d+"))
-            {
-                throw new FormulaFormatException("there are two operands with a space between them");
-            }
+            //check for spaces between operands//commented out this code blaock but not sure if i should put it back in
+            //if (Regex.IsMatch(_formula, @"[a-zA-Z]*\d+\s+[a-zA-Z]*\d+"))
+            //{
+            //    throw new FormulaFormatException("there are two operands with a space between them");
+            //}
 
-            if (Regex.IsMatch(_formula, @"[a-zA-Z]+[^0-9]$"))//trying to test for one or more letters and no numbers
-            {
-                throw new FormulaFormatException("invalid variable, letters without a number");
-            }
+            //if (Regex.IsMatch(_formula, @"[a-zA-Z]+[^0-9]$"))//trying to test for one or more letters and no numbers
+            //{
+            //    throw new FormulaFormatException("invalid variable, letters without a number");
+            //}
 
             //use regular expressions to replace all the whitespace in input with nothing
-            _formula = Regex.Replace(_formula, @"\s+", "");
+            //_formula = Regex.Replace(_formula, @"\s+", "");//? should uncomment? dont thinks so
 
             ////this will throw an exception if any of the input characters are invalid
             //if (Regex.IsMatch(_formula, @"[^0-9A-Za-z()*/+-]"))
@@ -308,10 +308,10 @@ namespace SpreadsheetUtilities
                             values.Push(substrings[i]);
                         }
                     }
-                    else
-                    {
-                        throw new FormulaFormatException("no values on the value stack to multiply or divide by");
-                    }
+                    //else
+                    //{
+                    //    throw new FormulaFormatException("no values on the value stack to multiply or divide by");
+                    //}
                 }
                 //if * or / operator or ( left parenthesis then push onto the operator stack
                 if (substrings[i] == "*" || substrings[i] == "/" || substrings[i] == "(")
@@ -335,18 +335,18 @@ namespace SpreadsheetUtilities
                             values.Push(AddOrSubtract(x, y, sign, lookup).ToString());//do calculation and push result back onto values stack as a string
 
                         }
-                        else
-                        {
-                            throw new FormulaFormatException("tried to pop off 2 values from value stack for + or - operator but there were fewer than 2 values, could be caused by extra operator");
-                        }
+                        //else
+                        //{
+                        //    throw new FormulaFormatException("tried to pop off 2 values from value stack for + or - operator but there were fewer than 2 values, could be caused by extra operator");
+                        //}
                     }
                     operators.Push(substrings[i]);//push + or - onto the operator stack either way, regardless of whether above to conditions are met
                 }
 
                 if (substrings[i] == ")")
                 {
-                    if (operators.Count == 0)
-                        throw new Exception("no operators on the stack to pop after a right parenthesis, perhaps your parentheses are not in the proper order");
+                    //if (operators.Count == 0)
+                    //    throw new Exception("no operators on the stack to pop after a right parenthesis, perhaps your parentheses are not in the proper order");
 
                     if (operators.Peek() == "+" || operators.Peek() == "-")
                     {
@@ -358,19 +358,19 @@ namespace SpreadsheetUtilities
                             values.Push(AddOrSubtract(x, y, sign, lookup).ToString());//do calculation and push result back onto values stack as a string
 
                         }
-                        else
-                        {
-                            throw new FormulaFormatException("tried to pop off 2 values from value stack for + or - operator but there were fewer than 2 values, perhaps a right parenthesis is out of order or superfluous");
-                        }
+                        //else
+                        //{
+                        //    throw new FormulaFormatException("tried to pop off 2 values from value stack for + or - operator but there were fewer than 2 values, perhaps a right parenthesis is out of order or superfluous");
+                        //}
                     }
                     if (operators.Peek() == "(")
                     {
                         operators.Pop();
                     }
-                    else
-                    {
-                        throw new FormulaFormatException("the top of the operator stack was supposed to be a '(' but it was a: " + operators.Peek());
-                    }
+                    //else
+                    //{
+                    //    throw new FormulaFormatException("the top of the operator stack was supposed to be a '(' but it was a: " + operators.Peek());
+                    //}
                     if (operators.Count != 0 && (operators.Peek() == "/" || operators.Peek() == "*"))//peek the operator stack, if it has a * or / then do some evaluating, otherwise add the value to the value stack
                     {
 
@@ -381,16 +381,16 @@ namespace SpreadsheetUtilities
                             string sign = operators.Pop();
                             values.Push(MultiplyOrDivide(x, y, sign, lookup).ToString());
                         }
-                        else
-                        {
-                            throw new FormulaFormatException("tried to pop off 2 values from value stack for * or / operator but there were fewer than 2 values on value stack");
-                        }
+                        //else
+                        //{
+                        //    throw new FormulaFormatException("tried to pop off 2 values from value stack for * or / operator but there were fewer than 2 values on value stack");
+                        //}
 
                     }
-                    else
-                    {
-                        //i think don't do anything here?
-                    }
+                    //else
+                    //{
+                    //    //i think don't do anything here?
+                    //}
                 }
             }
 
@@ -427,10 +427,10 @@ namespace SpreadsheetUtilities
                     values.Push(AddOrSubtract(x, y, sign, lookup).ToString());
                     return Convert.ToDouble(values.Pop());//try parse?
                 }
-                else
-                {
-                    throw new FormulaFormatException("more than one operator left on the stack after string has been evaluated, or one remaining operator is not a + or -, or not exactly 2 values left on the value stack");
-                }
+                //else
+                //{
+                //    throw new FormulaFormatException("more than one operator left on the stack after string has been evaluated, or one remaining operator is not a + or -, or not exactly 2 values left on the value stack");
+                //}
             }
 
 
