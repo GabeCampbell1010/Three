@@ -56,16 +56,36 @@ namespace FormulaTester
             //Assert.AreEqual(a,t);
         }
 
+
+        //Negative Parenthesis Tests
         /// <summary>
         ///parenthesis counts
         ///</summary>
         [TestMethod()]
-        public void ParenCount()
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void ParenCount1()
         {
-            Formula t = new Formula("A1 + 2");
-            Formula a = t;
-            Assert.IsFalse(a != t);
-            //Assert.AreEqual(a,t);
+            Formula t = new Formula(")A1 + 2");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void ParenCount2()
+        {
+            Formula a = new Formula(")A1 + 2(");
+            a = new Formula("(A1)) + 2");
+            a = new Formula("(A1 + 2))");
+            a = new Formula("A1 + 2");
+        }
+
+        //Positive Parenthesis Tests
+        [TestMethod()]
+        public void ParenCount3()
+        {
+            Formula a = new Formula("(A1 + 2.1)");
+            a = new Formula("(A1) + 2");
+            a = new Formula("(A1 + 2)");
+            a = new Formula("A1 + 2 - (8*8)");
         }
 
         //have three different tests for each block of code inside of the class, for each method and the constructor, and write more than that

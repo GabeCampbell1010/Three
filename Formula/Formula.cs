@@ -130,20 +130,20 @@ namespace SpreadsheetUtilities
             {
                 throw new FormulaFormatException("first token is not a number, variable or opening parenthesis");
             }
-            if (!(Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"\(") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"-?\d+(?:\.\d+)?")))//i added this last regex myself because the given one for numbes does not seem to work properly
+            if (!(Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"\)") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"-?\d+(?:\.\d+)?")))//i added this last regex myself because the given one for numbes does not seem to work properly
             {
                 var check = tokenArray[tokenArray.Length - 1];
                 throw new FormulaFormatException("last token is not a number, variable or closing parenthesis");
             }
 
-            
-            for (int i = 0; i < tokenArray.Length; i++)//could probably just do everything inthis for loop
+            double val;
+            for (int i = 0; i < tokenArray.Length - 1; i++)//could probably just do everything inthis for loop
             {
                 //number 7
                 //Any token that immediately follows an opening parenthesis or an operator must be either a number, a variable, or an opening parenthesis.
                 if (tokenArray[i] == "(" || Regex.IsMatch(tokenArray[i], @"[\+\-*/]"))
                 {
-                    if (!(Regex.IsMatch(tokenArray[i+1], @"\(") || Regex.IsMatch(tokenArray[i + 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[i + 1], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"-?\d+(?:\.\d+)?")))
+                    if (!(Regex.IsMatch(tokenArray[i+1], @"\(") || Regex.IsMatch(tokenArray[i + 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Double.TryParse(tokenArray[i + 1], out val)))
                     {
                         throw new FormulaFormatException("token that immediately follows an opening parenthesis or an operator is not either a number, a variable, or an opening parenthesis");
                     }
