@@ -123,20 +123,28 @@ namespace SpreadsheetUtilities
             {
                 throw new FormulaFormatException("parentheses open and close numbers not match");
             }
-
+            double val;
             // 5 and 6 starting and ending token check
             //The first token of an expression must be a number, a variable, or an opening parenthesis.
-            if (!(Regex.IsMatch(tokenArray[0], @"\(") || Regex.IsMatch(tokenArray[0], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[0], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?")))
+            if (!(Regex.IsMatch(tokenArray[0], @"\(") || Regex.IsMatch(tokenArray[0], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Double.TryParse(tokenArray[0], out val)))
             {
                 throw new FormulaFormatException("first token is not a number, variable or opening parenthesis");
             }
-            if (!(Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"\)") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"-?\d+(?:\.\d+)?")))//i added this last regex myself because the given one for numbes does not seem to work properly
+            var lastToken = tokenArray[tokenArray.Length - 1];
+
+            if(!Regex.IsMatch(lastToken, @"\)") || !Double.TryParse(tokenArray[0], out val) || !Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
             {
-                var check = tokenArray[tokenArray.Length - 1];
                 throw new FormulaFormatException("last token is not a number, variable or closing parenthesis");
+
             }
 
-            double val;
+            //if (!(Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"\)") || Regex.IsMatch(tokenArray[tokenArray.Length - 1], @"[a-zA-Z_](?: [a-zA-Z_]|\d)*") || Double.TryParse(tokenArray[0], out val)))//i added this last regex myself because the given one for numbes does not seem to work properly
+            //{
+            //    //var check = tokenArray[tokenArray.Length - 1];
+            //    throw new FormulaFormatException("last token is not a number, variable or closing parenthesis");
+            //}
+
+            
             for (int i = 0; i < tokenArray.Length - 1; i++)//could probably just do everything inthis for loop
             {
                 //number 7

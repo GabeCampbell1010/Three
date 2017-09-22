@@ -88,6 +88,59 @@ namespace FormulaTester
             a = new Formula("A1 + 2 - (8*8)");
         }
 
+        //token count
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void TokenCount()
+        {
+            Formula a = new Formula("");
+        }
+
+        //last variable
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void LastVariable()
+        {
+            Formula a = new Formula("8 +");
+        }
+
+        //token count
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void FirstVariable()
+        {
+            Formula a = new Formula("+ 8");
+        }
+
+        //follows an opening parenthesis
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void OpenParenFollow()
+        {
+            Formula a = new Formula("(+");
+            a = new Formula("()");
+
+        }
+
+        //follows a closing parenthesis
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void CloseParenFollow()
+        {
+            Formula a = new Formula(")4");
+            a = new Formula("()");
+
+        }
+
+        //follows a closing parenthesis
+        [TestMethod()]
+        public void GetHashCodeTest()
+        {
+            Formula a = new Formula("4");
+            a.GetHashCode();
+
+        }
+
         //have three different tests for each block of code inside of the class, for each method and the constructor, and write more than that
         //get close to 100% code coverage
         //passing is 85, superior around 95
