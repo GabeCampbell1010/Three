@@ -33,7 +33,37 @@ namespace FormulaTester
         }
 
         /// <summary>
-        ///Equals
+        ///EqualsFails
+        ///</summary>
+        [TestMethod()]
+        public void EqualsFails()
+        {
+            Formula t = new Formula("A1 + 2");
+            double a = 8;
+            Assert.IsFalse(t.Equals(a));
+            //Assert.AreEqual(a,t);
+        }
+
+        [TestMethod()]
+        public void EqualsFailsEitherNull()
+        {
+            Formula t = new Formula("A1 + 2");
+            Formula a = null;
+            Assert.IsFalse(t.Equals(a));
+            //Assert.AreEqual(a,t);
+        }
+
+        [TestMethod()]
+        public void EqualsFailsDiffFormulae()
+        {
+            Formula t = new Formula("A1 + 2");
+            Formula a = new Formula("A1 + 9");
+            Assert.IsFalse(t.Equals(a));
+            //Assert.AreEqual(a,t);
+        }
+
+        /// <summary>
+        ///Equals Operator
         ///</summary>
         [TestMethod()]
         public void EqualsOperator()
@@ -41,6 +71,42 @@ namespace FormulaTester
             Formula t = new Formula("A1 + 2");
             Formula a = t;
             Assert.IsTrue(a==t);
+            //Assert.AreEqual(a,t);
+        }
+
+        /// <summary>
+        ///Equals Operator one null
+        ///</summary>
+        [TestMethod()]
+        public void EqualsOperatorFails1()
+        {
+            Formula t = new Formula("A1 + 2");
+            Formula a = null;
+            Assert.IsFalse(a == t);
+            //Assert.AreEqual(a,t);
+        }
+
+        /// <summary>
+        ///Equals Operator both null
+        ///</summary>
+        [TestMethod()]
+        public void EqualsOperatorFails2()
+        {
+            Formula t = null;
+            Formula a = null;
+            Assert.IsTrue(a == t);
+            //Assert.AreEqual(a,t);
+        }
+
+        /// <summary>
+        ///Equals Operator diff strins
+        ///</summary>
+        [TestMethod()]
+        public void EqualsOperatorFails3()
+        {
+            Formula t = new Formula("A1 + 9");
+            Formula a = new Formula("A1 + 2");
+            Assert.IsFalse(a == t);
             //Assert.AreEqual(a,t);
         }
 
@@ -57,6 +123,15 @@ namespace FormulaTester
         }
 
 
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void DivideByZero()
+        {
+            Formula a = new Formula("5 + 3 - 1/0");
+            a.Evaluate(SampleDelegateDouble);
+        }
+
+
         //Negative Parenthesis Tests
         /// <summary>
         ///parenthesis counts
@@ -66,6 +141,13 @@ namespace FormulaTester
         public void ParenCount1()
         {
             Formula t = new Formula(")A1 + 2");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void ParenCount5()
+        {
+            Formula t = new Formula("(A1 + 2");
         }
 
         [TestMethod()]
@@ -96,6 +178,16 @@ namespace FormulaTester
             Formula a = new Formula("");
         }
 
+        /// <summary>
+        /// variable space variable
+        /// </summary>
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void VariableSpaces()
+        {
+            Formula a = new Formula("A1 A2");
+        }
+
         //last variable
         [TestMethod()]
         [ExpectedException(typeof(FormulaFormatException))]
@@ -117,7 +209,7 @@ namespace FormulaTester
         [ExpectedException(typeof(FormulaFormatException))]
         public void OpenParenFollow()
         {
-            Formula a = new Formula("(+");
+            Formula a = new Formula("(+)");
             a = new Formula("()");
 
         }
@@ -127,7 +219,7 @@ namespace FormulaTester
         [ExpectedException(typeof(FormulaFormatException))]
         public void CloseParenFollow()
         {
-            Formula a = new Formula(")4");
+            Formula a = new Formula("()4");
             a = new Formula("()");
 
         }
@@ -159,6 +251,18 @@ namespace FormulaTester
 
         }
 
+        //follows a closing parenthesis
+        //[TestMethod()]
+        //[ExpectedException(typeof(FormulaFormatException))]
+        //public void NullFormulaEval()
+        //{
+        //    //Formula a = new Formula("A1");
+        //    //a = null;
+        //    //a.Evaluate(SampleDelegate);
+        //    //throws null ref exception before it can evaluate
+
+        //}
+
         public double SampleDelegate(string s)
         {
             return 1;
@@ -182,6 +286,15 @@ namespace FormulaTester
         {
             Formula a = new Formula("A1");
             a.GetVariables();
+
+        }
+
+        //follows a closing parenthesis
+        [TestMethod()]
+        public void VariablesAll()
+        {
+            Formula a = new Formula("A1 + A2 - A3 / (A4 + A7)");
+            a.Evaluate(SampleDelegateDouble);
 
         }
 

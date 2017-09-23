@@ -157,7 +157,7 @@ namespace SpreadsheetUtilities
                     }
                 }
 
-                if (Regex.IsMatch(tokenArray[i], @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?"))
+                if (Double.TryParse(tokenArray[i], out val))
                 {
                     tokenArray[i] = Double.Parse(tokenArray[i]).ToString();
                 }
@@ -403,11 +403,11 @@ namespace SpreadsheetUtilities
 
                     if (Regex.IsMatch(values.Peek(), @"^[a-zA-Z]+\d+$"))
                     {
-                        try { X = lookup(values.Pop()); }
-                        catch (FormulaFormatException)
-                        {
-                            throw new FormulaFormatException("could not convert variable");
-                        }
+                        /*try { */X = lookup(values.Pop()); //}
+                        //catch (FormulaFormatException)
+                        //{
+                        //    throw new FormulaFormatException("could not convert variable");
+                        //}
                         return X;
 
                     }
@@ -434,13 +434,13 @@ namespace SpreadsheetUtilities
             }
 
 
-            //return 0;
+            return 0;
             //not really sure if below is necessary or helpful
             double result;
-            if (Double.TryParse(_formula, out result))
-                return result;
-            else
-                throw new Exception("the result could not be converted to an integer");
+            //if (Double.TryParse(_formula, out result))
+            //    return result;
+            //else
+            //    throw new Exception("the result could not be converted to an integer");
 
             #endregion
             //return null;
@@ -491,7 +491,7 @@ namespace SpreadsheetUtilities
             {
                 case "+": return X + Y;
                 case "-": return Y - X;
-                //default://throw new Exception("invalid operator");
+                    //default://throw new Exception("invalid operator");
             }
             return 0;//return either double or formula error in final build, have a variable that is just the result and return at teh ene after havingassigned result to math sum
         }
@@ -509,13 +509,15 @@ namespace SpreadsheetUtilities
         {
             double X = 0;
             double Y = 0;
+            double result;
             //need to check if the variable does not have a value in the table
             if (Regex.IsMatch(x, @"^[a-zA-Z]+\d+$"))
             {
                 try { X = lookup(x); }
-                catch (FormulaFormatException)
+                catch (ArgumentException)
                 {
-                    throw new FormulaFormatException("invalid variable");
+                    //return new FormulaError("improper variable");
+                    throw new FormulaFormatException("improper variable");
                 }
 
             }
@@ -526,9 +528,11 @@ namespace SpreadsheetUtilities
             if (Regex.IsMatch(y, @"^[a-zA-Z]+\d+$"))
             {
                 try { Y = lookup(x); }
-                catch (FormulaFormatException)
+                catch (ArgumentException)
                 {
-                    throw new FormulaFormatException("invalid variable");
+                    //return new FormulaError("improper variable");
+                    throw new FormulaFormatException("improper variable");
+
                 }
             }
             else
@@ -538,9 +542,15 @@ namespace SpreadsheetUtilities
 
             switch (sign)
             {
-                case "*": return X * Y;
-                case "/": if (X == 0) { throw new FormulaFormatException("divide by zero"); } else { return Y / X; }//should perhaps replace these conversions to tryparse to test to make sure that math can be done with them
-                default: throw new FormulaFormatException("invalid operator");
+                case "*":
+                    result = X * Y;
+                    return result;
+                case "/":
+                    if (X == 0) { throw new FormulaFormatException("divide by zero"); } else { result = Y / X; }
+                    return result;
+                //case "*": return X * Y;
+                //case "/": if (X == 0) { throw new FormulaFormatException("divide by zero"); } else { return Y / X; }//should perhaps replace these conversions to tryparse to test to make sure that math can be done with them
+                default: throw new FormulaFormatException("improper variable");
             }
         }
         #endregion
